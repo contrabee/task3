@@ -1,0 +1,73 @@
+-- 1. total number of customers by Country
+
+SELECT Country, COUNT(*) AS TOTAL_CUSTOMERS  from Customer
+GROUP BY COUNTRY
+ORDER BY TOTAL_CUSTOMERS DESC;
+
+-- 2. LISTING INVOICE TOTALS ALONG WITH CUSTOMER NAMES
+
+SELECT c.FirstName, c.LastName, i.total as Invoice_Total
+FROM invoice i
+INNER JOIN Customer c ON i.CustomerId = c.CustomerId;
+
+-- 3. list customers from BRAZIL,  sorted by last Name
+
+ SELECT LastName
+ from Customer
+ where country = 'Brazil'
+ ORDER by LastName ;
+
+-- 4. list of all customers and their invoices
+ SELECT c.LastName, c.FirstName, i.InvoiceId
+ from Customer as c
+ LEFT JOIN Invoice i on c.CustomerId = i.CustomerId
+ ORDER by c.LastName;
+
+-- 5. finding all customers who have spent more than average total invoice amount
+
+SELECT firstName, LastName, CustomerId, (SELECT AVG(total)
+										FROM INVOICE i 
+										where c.CustomerId = i.CustomerId) as customeravginvoice 
+from Customer c
+where CustomerId in (SELECT CustomerId
+				from Invoice
+				group by CustomerId
+				HAVING sum(total)> ( SELECT avg(total) as avgtotal
+									from Invoice));
+
+-- 6. most popular genre by number of tracks
+
+SELECT Name
+FROM Genre 
+WHERE GenreId = (SELECT GenreId
+				from Track
+				GROUP by GenreId)
+				ORDER BY COUNT(*) DESC;
+
+--7. TOTAL SALES PER COUNTRY; ordered by highest to lowest
+
+SELECT c.Country, sum(i.total) as TotalSales
+from Customer  c
+join invoice i on c.CustomerId = i.CustomerId
+group by c.Country
+order by TotalSales;
+
+--8. average invoice amount
+
+select avg(total) as amount
+from Invoice;
+
+-- 9. create view to show customer sales summary 
+
+CREATE VIEW css AS
+SELECT 
+  c.CustomerId,
+  c.FirstName || ' ' || c.LastName AS FullName,
+  SUM(i.Total) AS TotalSpent,
+  COUNT(i.InvoiceId) AS InvoiceCount
+FROM Customer c
+LEFT JOIN Invoice i ON c.CustomerId = i.CustomerId
+GROUP BY c.CustomerId;
+
+SELECT *
+FROM css;
